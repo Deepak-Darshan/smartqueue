@@ -9,6 +9,7 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared.config import get_sqs_client, QUEUES
+from shared.db import save_task, get_task, list_tasks
 
 app = FastAPI(title="SmartQueue Producer", version="1.0.0")
 
@@ -50,12 +51,25 @@ def enqueue_task(task: Task):
         }
     )
 
+    save_task(message)
+
     return {
         "task_id": task_id,
         "status": "queued",
         "priority": task.priority,
         "queue": QUEUES[task.priority]
     }
+
+@app.get("/tasks/{task_id}")
+def get_task_status(task_id: str):
+    task = get_task(task_id)
+    if task is None:
+        raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+    return task
+
+@app.get("/tasks")
+def list_all_tasks(status: Optional[str] = None, limit: int = 20):
+    return {"tasks": list_tasks(status=status, limit=limit)}
 
 @app.get("/queues/depth")
 def queue_depth():

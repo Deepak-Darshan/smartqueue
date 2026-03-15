@@ -15,3 +15,9 @@ QUEUES = {
 
 def get_sqs_client():
     return boto3.client("sqs", region_name=AWS_REGION)
+
+
+TABLE_NAME = "smartqueue-tasks"
+
+def get_dynamodb_client():
+    return boto3.client("dynamodb", region_name=AWS_REGION)
