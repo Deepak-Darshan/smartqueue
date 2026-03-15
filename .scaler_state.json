@@ -1,0 +1,1 @@
+{"current_workers": 1, "target_workers": 1, "circuit_breaker_status": "closed", "last_scaling_action": "no_change", "last_checked": 1773590339.505036, "queue_depths": {"high": 0, "normal": 0, "low": 0}}

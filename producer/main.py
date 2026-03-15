@@ -8,7 +8,7 @@ import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from shared.config import get_sqs_client, QUEUES
+from shared.config import get_sqs_client, QUEUES, SCALER_STATE_FILE
 from shared.db import save_task, get_task, list_tasks
 
 app = FastAPI(title="SmartQueue Producer", version="1.0.0")
@@ -70,6 +70,21 @@ def get_task_status(task_id: str):
 @app.get("/tasks")
 def list_all_tasks(status: Optional[str] = None, limit: int = 20):
     return {"tasks": list_tasks(status=status, limit=limit)}
+
+@app.get("/scaler/status")
+def scaler_status():
+    try:
+        with open(SCALER_STATE_FILE) as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {
+            "current_workers": 0,
+            "target_workers": 0,
+            "circuit_breaker_status": "unknown",
+            "last_scaling_action": "scaler not started",
+            "last_checked": None,
+            "queue_depths": {},
+        }
 
 @app.get("/queues/depth")
 def queue_depth():

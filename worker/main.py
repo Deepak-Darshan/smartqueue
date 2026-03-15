@@ -33,9 +33,20 @@ def process_task(task: dict) -> None:
         raise RuntimeError("simulated processing failure")
 
 
+def _try_update_status(task_id: str, status: str, **kwargs) -> None:
+    """Call update_task_status, logging and swallowing any DynamoDB error.
+
+    SQS message processing must never abort because of a DynamoDB outage.
+    """
+    try:
+        update_task_status(task_id, status, **kwargs)
+    except Exception as exc:
+        log.warning(f"[{task_id}] DynamoDB status update failed (status={status}): {exc}")
+
+
 def send_to_dlq(sqs, task: dict) -> None:
     sqs.send_message(QueueUrl=QUEUES["dlq"], MessageBody=json.dumps(task))
-    update_task_status(task["task_id"], "dead_lettered", error="exceeded max retries")
+    _try_update_status(task["task_id"], "dead_lettered", error="exceeded max retries")
     log.warning(
         f"[{task['task_id']}] DEAD-LETTERED  "
         f"attempts={task['attempts']}  max_retries={task.get('max_retries', 3)}"
@@ -50,7 +61,7 @@ def requeue_task(sqs, task: dict, queue_url: str, priority: str) -> None:
         MessageBody=json.dumps(task),
         DelaySeconds=delay,
     )
-    update_task_status(
+    _try_update_status(
         task["task_id"], "queued",
         error=f"attempt {attempt} failed, retrying in {delay}s",
     )
@@ -69,14 +80,14 @@ def handle_message(sqs, message: dict, priority: str, queue_url: str) -> None:
         f"[{task_id}] RECEIVED  queue={priority}  "
         f"attempt={task.get('attempts', 0)}"
     )
-    update_task_status(task_id, "processing")
 
     try:
+        _try_update_status(task_id, "processing")
         process_task(task)
 
         # Success — remove from queue and record result
         sqs.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle)
-        update_task_status(task_id, "completed", result="ok")
+        _try_update_status(task_id, "completed", result="ok")
         log.info(f"[{task_id}] SUCCESS  queue={priority}")
 
     except Exception as exc:
