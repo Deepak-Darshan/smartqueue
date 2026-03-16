@@ -6,8 +6,8 @@ import sys
 import time
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from shared.config import get_sqs_client, QUEUES
-from shared.db import update_task_status
+from shared.config import get_sqs_client, QUEUES  # noqa: E402
+from shared.db import update_task_status  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,

@@ -15,11 +15,11 @@ import time
 import uuid
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from shared.config import get_sqs_client, QUEUES, SCALER_STATE_FILE
+from shared.config import get_sqs_client, QUEUES, SCALER_STATE_FILE  # noqa: E402
 
 # Import the worker's poll loop so each thread runs the real worker logic
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import worker.main as worker_module
+import worker.main as worker_module  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,

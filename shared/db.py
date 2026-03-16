@@ -104,7 +104,8 @@ def save_task(task: dict) -> None:
     """
     client = get_dynamodb_client()
     now = time.time()
-    item = {**task, "status": "queued", "created_at": now, "expires_at": int(now + _TTL_DAYS * 86400)}
+    item = {**task, "status": "queued", "created_at": now,
+            "expires_at": int(now + _TTL_DAYS * 86400)}
     client.put_item(
         TableName=TABLE_NAME,
         Item={k: _to_dynamo(v) for k, v in item.items()},
