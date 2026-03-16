@@ -13,6 +13,8 @@ from shared.db import save_task, get_task, list_tasks  # noqa: E402
 
 app = FastAPI(title="SmartQueue Producer", version="1.0.0")
 
+_ASSISTANT_MODEL = "claude-sonnet-4-20250514"
+
 
 class Task(BaseModel):
     task_type: str
@@ -104,3 +106,26 @@ def queue_depth():
         )
         depths[name] = int(response["Attributes"]["ApproximateNumberOfMessages"])
     return {"queue_depths": depths}
+
+
+# ---------------------------------------------------------------------------
+# AI Ops Assistant endpoints
+# ---------------------------------------------------------------------------
+
+class AssistantQuery(BaseModel):
+    question: str
+
+
+@app.post("/assistant/ask")
+def assistant_ask(query: AssistantQuery):
+    try:
+        from assistant.main import run_assistant  # noqa: E402 (lazy: keeps startup clean)
+        answer = run_assistant(query.question)
+        return {"question": query.question, "answer": answer}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get("/assistant/health")
+def assistant_health():
+    return {"status": "ok", "model": _ASSISTANT_MODEL}
