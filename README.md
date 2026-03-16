@@ -1,5 +1,7 @@
 # SmartQueue
 
+![CI](https://github.com/Deepak-Darshan/smartqueue/actions/workflows/ci.yml/badge.svg)
+
 A production-grade distributed task queue built on AWS with an AI-powered ops assistant.
 
 ---
